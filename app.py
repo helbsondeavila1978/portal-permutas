@@ -30,18 +30,23 @@ else:
     st.markdown("Sistema integrado para cruzamento de demandas e ofertas de permuta da rede pública.")
     st.markdown("---")
 
-    # Painel de Filtros na Barra Lateral
-    st.sidebar.header("🔍 Filtros de Pesquisa")
+    # Painel de Filtros Visível Diretamente na Página (Excelente para Celular)
+    st.subheader("🔍 Filtros de Pesquisa")
     
-    origens_opcoes = ["Todos"] + sorted(df['municipio_origem'].dropna().astype(str).str.strip().unique().tolist())
-    origem_sel = st.sidebar.selectbox("Município de Origem", origens_opcoes)
+    col_f1, col_f2, col_f3 = st.columns(3)
+    
+    with col_f1:
+        origens_opcoes = ["Todos"] + sorted(df['municipio_origem'].dropna().astype(str).str.strip().unique().tolist())
+        origem_sel = st.selectbox("Município de Origem", origens_opcoes)
 
-    destinos_lista = list(set(df['municipio_desejado_1'].dropna().astype(str).str.strip().unique().tolist() + 
-                              df['municipio_desejado_2'].dropna().astype(str).str.strip().unique().tolist()))
-    destinos_opcoes = ["Todos"] + sorted([d for d in destinos_lista if d and d != 'nan'])
-    destino_sel = st.sidebar.selectbox("Município Desejado", destinos_opcoes)
+    with col_f2:
+        destinos_lista = list(set(df['municipio_desejado_1'].dropna().astype(str).str.strip().unique().tolist() + 
+                                  df['municipio_desejado_2'].dropna().astype(str).str.strip().unique().tolist()))
+        destinos_opcoes = ["Todos"] + sorted([d for d in destinos_lista if d and d != 'nan'])
+        destino_sel = st.selectbox("Município Desejado", destinos_opcoes)
 
-    busca_txt = st.sidebar.text_input("Busca Livre (Nome ou Observação)", "")
+    with col_f3:
+        busca_txt = st.text_input("Busca Livre (Nome ou Observação)", "")
 
     # Aplicar Filtros
     df_f = df.copy()
@@ -59,6 +64,8 @@ else:
             df_f['observacao'].astype(str).str.lower().str.contains(termo, na=False)
         ]
 
+    st.markdown("---")
+
     # Cartões de Métricas (KPIs)
     col1, col2, col3 = st.columns(3)
     col1.metric("Cadastros Filtrados", len(df_f))
@@ -73,7 +80,7 @@ else:
     else:
         st.subheader("📋 Servidores Encontrados")
         
-        # Criar linhas com 3 colunas de cartões
+        # Criar linhas com colunas de cartões responsivas
         for i in range(0, len(df_f), 3):
             cols = st.columns(3)
             for j in range(3):
@@ -91,7 +98,6 @@ else:
                         tel = str(row.get('telefone', ''))
                         email = str(row.get('email', ''))
                         
-                        # Bloco visual limpo para cada cartão
                         st.markdown(f"""
                         **{nome}**  
                         `Rede: {rede}`  
