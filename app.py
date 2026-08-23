@@ -12,24 +12,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# Estilização Visual (Padrão Executivo / Cartões em Grade)
-st.markdown("""
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        .main { background-color: #f8fafc; font-family: 'Inter', sans-serif; }
-        .portal-header { border-bottom: 2px solid #3b82f6; padding-bottom: 15px; margin-bottom: 20px; }
-        .portal-title { font-size: 24px; font-weight: 700; color: #1e3a8a; margin: 0 0 5px 0; }
-        .portal-desc { font-size: 14px; color: #64748b; margin: 0; }
-        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-top: 15px; }
-        .card-item { background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 18px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .card-name { font-size: 16px; font-weight: 600; color: #0f172a; margin-bottom: 4px; }
-        .card-badge { display: inline-block; background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; margin-bottom: 10px; }
-        .card-route { font-size: 13px; background: #f1f5f9; padding: 8px 10px; border-radius: 6px; margin-bottom: 10px; color: #334155; }
-        .card-obs { font-size: 12px; color: #475569; font-style: italic; margin-bottom: 12px; min-height: 30px; }
-        .card-footer { border-top: 1px solid #f1f5f9; padding-top: 10px; font-size: 12px; color: #1e293b; }
-    </style>
-""", unsafe_allow_html=True)
-
 # Carregamento dos Dados
 @st.cache_data
 def carregar_dados():
@@ -44,14 +26,11 @@ if df.empty:
     st.error("⚠️ O arquivo 'permutas_database.json' não foi encontrado no repositório.")
 else:
     # Cabeçalho Institucional
-    st.markdown("""
-        <div class="portal-header">
-            <h2 class="portal-title">🏛️ Portal Oficial de Consulta de Permutas</h2>
-            <p class="portal-desc">Sistema integrado para cruzamento de demandas e ofertas da rede pública.</p>
-        </div>
-    """, unsafe_allow_html=True)
+    st.title("🏛️ Portal Oficial de Consulta de Permutas")
+    st.markdown("Sistema integrado para cruzamento de demandas e ofertas de permuta da rede pública.")
+    st.markdown("---")
 
-    # Painel de Filtros na Barra Lateral (Sidebar)
+    # Painel de Filtros na Barra Lateral
     st.sidebar.header("🔍 Filtros de Pesquisa")
     
     origens_opcoes = ["Todos"] + sorted(df['municipio_origem'].dropna().astype(str).str.strip().unique().tolist())
@@ -88,44 +67,43 @@ else:
 
     st.markdown("---")
 
-    # Exibição em Grade de Cartões
+    # Exibição em Cartões Organizados por Colunas Nativas
     if df_f.empty:
         st.info("Nenhum servidor localizado com os critérios informados.")
     else:
-        cards_html = '<div class="cards-grid">'
-        for _, row in df_f.iterrows():
-            nome = str(row.get('nome', 'Servidor'))
-            rede = str(row.get('rede', 'Municipal'))
-            origem_val = str(row.get('municipio_origem', ''))
-            d1 = str(row.get('municipio_desejado_1', ''))
-            d2 = str(row.get('municipio_desejado_2', ''))
-            destinos_str = f"<b>{d1}</b>" + (f" / {d2}" if d2 and d2 != 'nan' else "")
-            obs = str(row.get('observacao', ''))
-            obs_str = obs if obs and obs != 'nan' else "Nenhuma observação informada."
-            tel = str(row.get('telefone', ''))
-            email = str(row.get('email', ''))
-            
-            cards_html += f"""
-            <div class="card-item">
-                <div class="card-name">{nome}</div>
-                <div class="card-badge">Rede: {rede}</div>
-                <div class="card-route">
-                    📍 <b>Origem:</b> {origem_val}<br>
-                    🎯 <b>Deseja:</b> {destinos_str}
-                </div>
-                <div class="card-obs">"{obs_str}"</div>
-                <div class="card-footer">
-                    📞 <b>Tel:</b> {tel}<br>
-                    📧 <b>E-mail:</b> {email}
-                </div>
-            </div>
-            """
-        cards_html += '</div>'
-        st.markdown(cards_html, unsafe_allow_html=True)
+        st.subheader("📋 Servidores Encontrados")
+        
+        # Criar linhas com 3 colunas de cartões
+        for i in range(0, len(df_f), 3):
+            cols = st.columns(3)
+            for j in range(3):
+                if i + j < len(df_f):
+                    row = df_f.iloc[i + j]
+                    with cols[j]:
+                        nome = str(row.get('nome', 'Servidor'))
+                        rede = str(row.get('rede', 'Municipal'))
+                        origem_val = str(row.get('municipio_origem', ''))
+                        d1 = str(row.get('municipio_desejado_1', ''))
+                        d2 = str(row.get('municipio_desejado_2', ''))
+                        destinos_str = f"**{d1}**" + (f" / {d2}" if d2 and d2 != 'nan' else "")
+                        obs = str(row.get('observacao', ''))
+                        obs_str = f"*{obs}*" if obs and obs != 'nan' else "*Nenhuma observação informada.*"
+                        tel = str(row.get('telefone', ''))
+                        email = str(row.get('email', ''))
+                        
+                        # Bloco visual limpo para cada cartão
+                        st.markdown(f"""
+                        **{nome}**  
+                        `Rede: {rede}`  
+                        📍 **Origem:** {origem_val}  
+                        🎯 **Deseja:** {destinos_str}  
+                        {obs_str}  
+                        📞 **Tel:** {tel}  
+                        📧 **E-mail:** {email}
+                        """, unsafe_allow_html=True)
+                        st.markdown("---")
 
-    st.markdown("---")
-
-    # Gráficos Estatísticos de Barras Horizontais
+    # Gráficos Estatísticos
     st.subheader("📊 Análise Estatística de Demanda por Município")
     
     fig, axes = plt.subplots(1, 2, figsize=(14, 5.5))
@@ -138,9 +116,9 @@ else:
     
     if not top_destinos.empty:
         sns.barplot(x=top_destinos.values, y=top_destinos.index, ax=axes[0], palette="Blues_r")
-        axes[0].set_title("Top Municipios Mais Desejados (Destinos)", fontsize=12, fontweight='bold', color="#1e3a8a")
-        axes[0].set_xlabel("Numero de Interesses", fontsize=10)
-        axes[0].set_ylabel("Municipio", fontsize=10)
+        axes[0].set_title("Top Municípios Mais Desejados (Destinos)", fontsize=12, fontweight='bold', color="#1e3a8a")
+        axes[0].set_xlabel("Número de Interesses", fontsize=10)
+        axes[0].set_ylabel("Município", fontsize=10)
         for p in axes[0].patches:
             axes[0].annotate(f"{int(p.get_width())}", (p.get_width() + 0.2, p.get_y() + p.get_height()/2.),
                              va='center', fontsize=9, color='#1e293b', fontweight='bold')
@@ -149,9 +127,9 @@ else:
     top_origens = df_f['municipio_origem'].value_counts().head(6)
     if not top_origens.empty:
         sns.barplot(x=top_origens.values, y=top_origens.index, ax=axes[1], palette="crest")
-        axes[1].set_title("Top Municipios com Maior Demanda de Saida (Origem)", fontsize=12, fontweight='bold', color="#1e3a8a")
-        axes[1].set_xlabel("Numero de Servidores", fontsize=10)
-        axes[1].set_ylabel("Municipio", fontsize=10)
+        axes[1].set_title("Top Municípios com Maior Demanda de Saída (Origem)", fontsize=12, fontweight='bold', color="#1e3a8a")
+        axes[1].set_xlabel("Número de Servidores", fontsize=10)
+        axes[1].set_ylabel("Município", fontsize=10)
         for p in axes[1].patches:
             axes[1].annotate(f"{int(p.get_width())}", (p.get_width() + 0.2, p.get_y() + p.get_height()/2.),
                              va='center', fontsize=9, color='#1e293b', fontweight='bold')
